@@ -40,10 +40,15 @@ class Orderer:
 
     def brief(self, result):
         lines = ["【下单员预览】"]
-        lines.append("  门店: {}".format(result["store"]["name"]))
+        store = result["store"]
+        store_note = "（默认门店，真实门店需 query-nearby-stores 定位）" \
+            if store.get("storeId") == "MOCK-001" else ""
+        lines.append("  门店: {}{}".format(store["name"], store_note))
         for i in result["items"]:
-            lines.append("  - {} {}元".format(i["name"], i["price"]))
-        lines.append("  应付: {} 元".format(result["payable"]))
+            price = "{}元".format(i["price"]) if i.get("price") else "时价"
+            lines.append("  - {} {}".format(i["name"], price))
+        payable = "{} 元".format(result["payable"]) if result["payable"] is not None else "以门店实价为准"
+        lines.append("  应付: {}".format(payable))
         lines.append("  状态: {}".format(
             "已提交（真实订单）" if result["status"] == "submitted" else "预览（未下单）"))
         if result.get("note"):
