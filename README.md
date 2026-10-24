@@ -7,7 +7,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-ffbc0d.svg)](LICENSE)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![麦当劳 MCP](https://img.shields.io/badge/MCP-McDonald's%20China-c8102e.svg)](https://open.mcd.cn/mcp)
-[![Tests](https://img.shields.io/badge/tests-7%20passed-brightgreen.svg)](#-开发与测试)
+[![Tests](https://img.shields.io/badge/tests-12%20passed-brightgreen.svg)](#-开发与测试)
 
 ---
 
@@ -54,12 +54,12 @@
 ## ✨ 特性
 
 - **🧠 任务拆解**：自然语言 → 结构化任务单（预算/场景/营养目标），正则规则引擎，零 LLM 依赖也能跑
-- **🥗 营养配餐**：基于麦当劳 MCP 真实营养数据，预算感知的性价比贪心选餐，不超支、不糊弄
-- **💰 凑券最优**：查询可领/可用优惠券，估算最优券，并用 `calculate-price` 交叉验证——嘴上说省，账上真省
-- **📡 活动雷达**：`campaign-calendar` + `now-time-info`，薅羊毛情报实时推送
+- **🥗 营养配餐**：直吃麦当劳 MCP `list-nutrition-foods` 真实营养表（160 个餐品的热量/蛋白/脂肪/钠/钙），预算感知的性价比贪心选餐，不超支、不糊弄
+- **💰 凑券最优**：`available-coupons` 真实可领券情报 + `calculate-price` 实算交叉验证——嘴上说省，账上真省
+- **📡 活动雷达**：`campaign-calendar` + `now-time-info`，28 个真实活动实时薅羊毛情报
 - **🛡️ 安全下单**：下单员默认只出预览，真实 `create-order` 必须显式 `confirm=True`，决定权永远在人
-- **🔌 双模式**：有 `MCD_MCP_TOKEN` 走实弹；没有也能一键 mock demo，clone 下来 30 秒看到效果
-- **🧪 可测**：7 个单元测试覆盖预算解析、场景识别、流水线、报告生成
+- **🔌 双模式**：有 `MCD_MCP_TOKEN` 走实弹（35 个工具全量可用）；没有也能一键 mock demo，clone 下来 30 秒看到效果
+- **🧪 可测**：12 个单元测试覆盖预算解析、场景识别、流水线、报告生成，以及 5 个基于真实响应存档的解析器测试
 
 ## 🚀 快速开始
 
@@ -106,42 +106,61 @@ print(report["brief"])                # 完整文字战报
 
 ## 🎬 Demo 实拍
 
+### 实弹模式（真实麦当劳 MCP，2026-10-24 实测）
+
 ```
-$ python demo.py "加班餐，30块以内，多来点蛋白"
+$ export MCD_MCP_TOKEN=<你的MCP Token>
+$ python demo.py "加班餐，多来点蛋白"
 
 【队长简报】
-  原始需求: 加班餐，30块以内，多来点蛋白
-  预算上限: 30.0 元
+  原始需求: 加班餐，多来点蛋白
+  预算上限: 50.0 元
   场景判断: 加班充饥
   营养目标: 高蛋白
+
+【营养师配餐】（数据来自 MCP list-nutrition-foods 真实营养表，160 个餐品）
+  芝士双层安格斯厚牛堡 (主食) 时价 1003.0千卡 蛋白58.0g
+  冰牛奶大杯 (饮品) 时价 269.0千卡 蛋白15.0g
+  热浓浓抹茶牛奶大杯 (饮品) 时价 333.0千卡 蛋白14.0g
+  中薯条 (小食) 时价 289.0千卡 蛋白4.0g
+  小计: 以门店实价为准 | 热量 1894.0 千卡 | 蛋白 91.0 g
+  点评: 蛋白质合计 91.0 g，训练后补给充足。
+
+【省钱特工战报】（数据来自 MCP available-coupons 真实可领券）
+  配餐价格以门店实价为准，先看券情报
+  可领券情报: 免费脆薯饼, 11.9元麦辣鸡腿堡, 19.9元王牌炸鸡任选2
+
+【雷达员情报】（数据来自 MCP campaign-calendar 真实活动日历）
+  当前时间: 2026-10-24T18:12:18.411
+  [进行中] 麦当劳「我就喜欢」限定丝巾正式开售🔥 (2026年10月24日)
+  [进行中] 韩式风味蘸酱上新❤️就「酱」心有所「薯」 (2026年10月24日)
+  [进行中] 参与麦金喜抽奖，🉐[积分霸王餐] (2026年10月24日)
+  ……等 24 个进行中活动
+
+【下单员预览】
+  门店: 麦当劳(科技园餐厅)（默认门店，真实门店需 query-nearby-stores 定位）
+  应付: 以门店实价为准
+  状态: 预览（未下单）
+```
+
+### Mock 模式（无需 Token，clone 即跑）
+
+```
+$ python demo.py "加班餐，30块以内，多来点蛋白"
 
 【营养师配餐】
   猪柳蛋麦满分 (早餐) 13.0元 400千卡 蛋白19g
   中杯拿铁 (饮品) 15.0元 180千卡 蛋白10g
   小计: 28.0 元 | 热量 580 千卡 | 蛋白 29 g
-  点评: 蛋白质合计 29 g，训练后补给充足。
 
 【省钱特工战报】
-  配餐原价: 28.0 元
   选用优惠券: 饮品第二杯半价 (CP-1003)
   立省: 7.0 元 → 实付 21.0 元
-  预算达标: 是
-
-【雷达员情报】
-  [进行中] 麦麦省周三会员日 —— 每周三领券满40减20
-  [进行中] 巨无霸55周年纪念 —— 经典回归，限定周边兑换
-  [预告]   万圣节幽灵套餐 —— 限定包装+抽奖活动
-
-【下单员预览】
-  门店: 麦当劳(科技园餐厅)
-  应付: 21.0 元
-  状态: 预览（未下单）
-
 --------------------------------------------------------
 最终结论: 21.0 元拿下，预算 30.0 元，达标
 ```
 
-> 📋 [查看 HTML 战报示例（浏览器直接打开）](docs/report-sample.html)
+> 📋 [查看 HTML 战报示例（真实模式生成，浏览器直接打开）](docs/report-sample.html)
 
 ## 🔧 架构
 
@@ -150,6 +169,7 @@ mcd-taskforce/
 ├── demo.py                      # 一键演示入口
 ├── mcd_taskforce/
 │   ├── mcp_client.py            # 麦当劳 MCP Streamable HTTP 客户端（纯标准库）
+│   ├── live_data.py             # 真实 MCP 响应解析层（markdown/表格格式 → 结构化数据）
 │   ├── mock_data.py             # mock 数据层，无 Token 也能跑全流程
 │   ├── orchestrator.py          # TaskForce 编排器：特工流水线
 │   ├── report.py                # 终端简报 + 自包含 HTML 战报
@@ -160,8 +180,14 @@ mcd-taskforce/
 │       ├── radar.py             # 雷达员：活动监控
 │       └── orderer.py           # 下单员：订单预览（默认不执行）
 └── tests/
-    └── test_orchestrator.py     # 7 个单元测试
+    ├── test_orchestrator.py     # 12 个单元测试
+    └── fixtures/                # 真实 MCP 响应存档（脱敏，不含 Token）
+        ├── nutrition.json       #   list-nutrition-foods 真实响应
+        ├── coupons.json         #   available-coupons 真实响应
+        └── calendar.json        #   campaign-calendar 真实响应
 ```
+
+麦当劳 MCP 的工具返回不是规整 JSON，而是「Markdown 说明书 + Original Response」的混合体，营养表更是独有的 `[N]{col1,col2}:` 表格格式。`live_data.py` 就是为消化这些真实格式而生——这也是本项目区别于"玩具 demo"的工程细节。
 
 每个 agent 都是无状态、可独立测试的单元：
 
@@ -171,7 +197,7 @@ class Agent:
         """输入任务单 + MCP 客户端，输出结构化结果。"""
 ```
 
-MCP 客户端实现了完整的 Streamable HTTP 协议（initialize → tools/list → tools/call），兼容纯 JSON 和 SSE 两种响应格式，见 [MCP_INTEGRATION.md](MCP_INTEGRATION.md)。
+MCP 客户端实现了完整的 Streamable HTTP 协议（initialize → tools/list → tools/call），兼容纯 JSON 和 SSE 两种响应格式，正确区分 JSON-RPC 通知（无 id，空响应体合法），见 [MCP_INTEGRATION.md](MCP_INTEGRATION.md)。
 
 ## 🧪 开发与测试
 
@@ -179,10 +205,13 @@ MCP 客户端实现了完整的 Streamable HTTP 协议（initialize → tools/li
 python -m unittest discover -s tests -v
 # test_budget_extract ... ok
 # test_scene_and_goal ... ok
+# test_nutrition_parser_on_real_response ... ok
+# test_coupon_parser_on_real_response ... ok
+# test_campaign_parser_on_real_response ... ok
 # test_full_run_within_budget ... ok
 # test_html_report ... ok
 # ...
-# Ran 7 tests — OK
+# Ran 12 tests — OK
 ```
 
 ## 🔐 安全设计
