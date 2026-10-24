@@ -61,12 +61,15 @@ class MCDMCPClient:
             raise MCPError("HTTP {}: {}".format(exc.code, detail))
         except urllib.error.URLError as exc:
             raise MCPError("网络错误: {}".format(exc.reason))
+        # JSON-RPC 通知（无 id）不期望响应体，空 body 是正常情况
+        if "id" not in payload:
+            return None
         return self._parse_response(raw)
 
     @staticmethod
     def _parse_response(raw):
         """MCP Streamable HTTP 可能返回纯 JSON 或 SSE，两种都兼容。"""
-        text = raw.strip()
+        text = (raw or "").strip()
         if not text:
             raise MCPError("空响应")
         if text.startswith("event:") or text.startswith("data:"):
